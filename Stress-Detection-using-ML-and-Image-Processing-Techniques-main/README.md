@@ -56,8 +56,8 @@ To run this project locally, you will need to have Python, pip, and virtualenv i
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/sachinjain2000/Stress-Detection-using-ML-and-Image-Processing-Techniques.git
-    cd Stress-Detection-using-ML-and-Image-Processing-Techniques
+    git clone https://github.com/shettyaditya266/Stress_Detection_Using_Machine_Learning_and_Image_Processing_Techniques
+    cd Stress_Detection_Using_Machine_Learning_and_Image_Processing_Techniques
     ```
 
 2.  **Create and activate a virtual environment:**

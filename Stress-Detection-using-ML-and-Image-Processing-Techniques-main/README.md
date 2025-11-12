@@ -1,6 +1,6 @@
 # Stress Detection using Machine Learning and Image Processing
 
-![Stress Detection Banner](https://i.imgur.com/8t2Zt5V.png)
+
 
 This project is a web-based application that uses machine learning and image processing to detect stress in individuals. It analyzes facial expressions to identify emotions and provides insights into a person's stress levels. This tool is designed to help IT professionals and others in high-pressure environments to monitor and manage their stress, promoting a healthier and more productive work environment.
 

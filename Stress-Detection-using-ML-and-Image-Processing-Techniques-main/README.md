@@ -124,6 +124,18 @@ For detailed instructions, please refer to the documentation of your chosen host
 
 *(Add screenshots of the application here)*
 
+![WhatsApp Image 2025-11-12 at 19 32 37_5ec247a7](https://github.com/user-attachments/assets/727c1e55-a50f-41da-a577-b867f9fc340a)
+
+
+![WhatsApp Image 2025-11-12 at 19 34 01_338d8da5](https://github.com/user-attachments/assets/45d87930-cac6-4a40-ba12-cf5f4fc32d8d)
+
+
+
+![WhatsApp Image 2025-11-12 at 19 34 28_f078173d](https://github.com/user-attachments/assets/36ba83d3-cbbc-447e-aa1e-97e7d5be33ae)
+
+
+![WhatsApp Image 2025-11-12 at 19 34 28_0dd47bfc](https://github.com/user-attachments/assets/e4572787-c154-4fb4-834b-3b514a0a12c3)
+
 ---
 
 ## 🙌 Contributing

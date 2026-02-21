@@ -1,0 +1,7 @@
+Stress-Detection-using-ML-and-Image-Processing-Techniques-main/data/
+Stress-Detection-using-ML-and-Image-Processing-Techniques-main/users/migrations/
+Stress-Detection-using-ML-and-Image-Processing-Techniques-main/db.sqlite3
+.git/
+.venv/
+__pycache__/
+*.pyc

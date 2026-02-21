@@ -1,102 +1,38 @@
 import os
 import sys
-import base64
-import numpy as np
-import pandas as pd
-import cv2
+
+# Silence TensorFlow logs
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
 
 app = FastAPI()
 
-# --- Paths & Configuration ---
+# --- Configuration ---
+# Helper to find project directory
 BASE_DIR = os.path.join(os.path.dirname(__file__), '..', 'Stress-Detection-using-ML-and-Image-Processing-Techniques-main')
-MODEL_PATH = os.path.join(BASE_DIR, 'model.h5')
-XML_PATH = os.path.join(BASE_DIR, 'haarcascade_frontalface_default.xml')
-DATA_PATH = os.path.join(BASE_DIR, 'media', 'stress_data.xlsx')
 
-# --- Model Loading (Lazy) ---
-cnn_model = None
-knn_model = None
-minmax_scale = None
-face_cascade = None
-
-def get_cnn_model():
-    global cnn_model
-    if cnn_model is None:
-        # Recreate the architecture as defined in kerasmodel.py
-        model = Sequential()
-        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
-        model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
-        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
-        model.add(Flatten())
-        model.add(Dense(1024, activation='relu'))
-        model.add(Dropout(0.5))
-        model.add(Dense(7, activation='softmax'))
-        
-        if os.path.exists(MODEL_PATH):
-            model.load_weights(MODEL_PATH)
-        cnn_model = model
-    return cnn_model
-
-def get_face_cascade():
-    global face_cascade
-    if face_cascade is None:
-        if os.path.exists(XML_PATH):
-            face_cascade = cv2.CascadeClassifier(XML_PATH)
-    return face_cascade
-
-def get_knn_resources():
-    global knn_model, minmax_scale
-    if knn_model is None:
-        if os.path.exists(DATA_PATH):
-            df = pd.read_excel(DATA_PATH, header=None)
-            df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
-            
-            features = ['ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
-            minmax_scale = preprocessing.MinMaxScaler().fit(df[features])
-            X_norm = minmax_scale.transform(df[features])
-            y = df['Target']
-            
-            knn_model = KNeighborsClassifier(n_neighbors=5)
-            knn_model.fit(X_norm, y)
-        else:
-            raise Exception(f"Data file not found at {DATA_PATH}")
-    return knn_model, minmax_scale
-
-# --- Routes ---
+# --- Lazy Loading Helpers ---
+def load_ml_resources():
+    import numpy as np
+    import pandas as pd
+    import cv2
+    import tensorflow as tf
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn import preprocessing
+    
+    return np, pd, cv2, tf, Sequential, Conv2D, MaxPooling2D, Dropout, Flatten, Dense, KNeighborsClassifier, preprocessing
 
 @app.get("/")
 async def health_check():
-    files = []
-    if os.path.exists(BASE_DIR):
-        files = os.listdir(BASE_DIR)
-    
     return {
         "status": "healthy",
-        "project": "Stress Detection AI",
-        "base_dir": BASE_DIR,
-        "base_dir_exists": os.path.exists(BASE_DIR),
-        "files_in_base_dir": files,
-        "endpoints": {
-            "/": "Health check",
-            "/predict_emotion": "POST - Detect emotion from image",
-            "/predict_stress": "POST - Detect stress from physiological data"
-        }
+        "project": "Stress Detection AI - Vercel Edition",
+        "message": "Production ready. All routes configured."
     }
 
 @app.get("/favicon.ico")
@@ -114,10 +50,24 @@ class PhysiologicalData(BaseModel):
 @app.post("/predict_stress")
 async def predict_stress(data: PhysiologicalData):
     try:
-        knn, scaler = get_knn_resources()
+        np, pd, cv2, tf, Sequential, Conv2D, MaxPooling2D, Dropout, Flatten, Dense, KNeighborsClassifier, preprocessing = load_ml_resources()
+        
+        DATA_PATH = os.path.join(BASE_DIR, 'media', 'stress_data.xlsx')
+        df = pd.read_excel(DATA_PATH, header=None)
+        df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
+        
+        features = ['ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
+        scaler = preprocessing.MinMaxScaler().fit(df[features])
+        X_norm = scaler.transform(df[features])
+        y = df['Target']
+        
+        knn = KNeighborsClassifier(n_neighbors=5)
+        knn.fit(X_norm, y)
+        
         input_data = [[data.ecg, data.emg, data.foot_gsr, data.hand_gsr, data.hr, data.resp]]
         input_norm = scaler.transform(input_data)
         prediction = knn.predict(input_norm)
+        
         return {"stress_detected": int(prediction[0])}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -125,16 +75,37 @@ async def predict_stress(data: PhysiologicalData):
 @app.post("/predict_emotion")
 async def predict_emotion(file: UploadFile = File(...)):
     try:
+        np, pd, cv2, tf, Sequential, Conv2D, MaxPooling2D, Dropout, Flatten, Dense, KNeighborsClassifier, preprocessing = load_ml_resources()
+        
+        # Load Architecture
+        model = Sequential()
+        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
+        model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
+        model.add(Flatten())
+        model.add(Dense(1024, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(7, activation='softmax'))
+        
+        MODEL_PATH = os.path.join(BASE_DIR, 'model.h5')
+        model.load_weights(MODEL_PATH)
+        
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        cascade = get_face_cascade()
+        XML_PATH = os.path.join(BASE_DIR, 'haarcascade_frontalface_default.xml')
+        cascade = cv2.CascadeClassifier(XML_PATH)
         faces = cascade.detectMultiScale(gray, 1.3, 5)
         
         emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
-        model = get_cnn_model()
         
         results = []
         for (x, y, w, h) in faces:

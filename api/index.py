@@ -82,9 +82,16 @@ def get_knn_resources():
 
 @app.get("/")
 async def health_check():
+    files = []
+    if os.path.exists(BASE_DIR):
+        files = os.listdir(BASE_DIR)
+    
     return {
         "status": "healthy",
         "project": "Stress Detection AI",
+        "base_dir": BASE_DIR,
+        "base_dir_exists": os.path.exists(BASE_DIR),
+        "files_in_base_dir": files,
         "endpoints": {
             "/": "Health check",
             "/predict_emotion": "POST - Detect emotion from image",

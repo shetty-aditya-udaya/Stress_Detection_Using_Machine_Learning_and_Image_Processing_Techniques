@@ -1,16 +1,30 @@
-# Exclude heavy ML framework files and data
+# Strategic Vercel Isolation
+# Exclude the entire legacy project (8.8GB)
 Stress-Detection-using-ML-and-Image-Processing-Techniques-main/
 Dockerfile
-# Standard excludes
+requirements-render.txt
+api/backend.py
+
+# Version control and Env waste
 .git/
 .venv/
+.env
 __pycache__/
 *.pyc
+
+# ML Binary Exclusions (just in case)
 *.h5
 *.pkl
 *.pt
 *.onnx
+*.weights
+*.xml
 *.xlsx
 *.csv
-node_modules/
+*.png
+*.jpg
+*.jpeg
+
+# Vercel waste
 .vercel/
+node_modules/

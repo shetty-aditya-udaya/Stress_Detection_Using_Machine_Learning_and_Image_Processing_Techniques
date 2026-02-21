@@ -6,39 +6,30 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from django.conf import settings
-filepath = settings.MEDIA_ROOT + "\\" + 'stress_data.xlsx'
-df = pd.read_excel(filepath, header=None)
-
-df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
-X_train, X_test, y_train, y_test = train_test_split(df[['ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']], df['Target'],
-    test_size=0.30, random_state=12345)
-
-# Min-Max Scaling
-
-minmax_scale = preprocessing.MinMaxScaler().fit(df[['ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']])
-df_minmax = minmax_scale.transform(df[['ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']])
-X_train_norm, X_test_norm, y_train_norm, y_test_norm = train_test_split(df_minmax, df['Target'],
-    test_size=0.30, random_state=12345)
-def plot():
-    plt.figure(figsize=(8,6))
-
-    plt.scatter(df['Hand GSR(mV)'], df['HR(bpm)'],
-            color='green', label='input scale', alpha=0.5)
-
-    plt.scatter(df_minmax[:,0], df_minmax[:,1],
-            color='blue', label='min-max scaled [min=0, max=1]', alpha=0.3)
-
-    plt.title('Hand GSR and HR content of the physiological dataset')
-    plt.xlabel('Hand GSR')
-    plt.ylabel('HR')
-    plt.legend(loc='upper left')
-    plt.grid()
-
-    plt.tight_layout()
+# Preprocessing and loading logic moved inside the class to prevent top-level execution during build.
+import os
 
 class KNNclassifier:
     def getKnnResults(self):
-        # filepath = settings.MEDIA_ROOT + "\\" + 'stress_data.xlsx'
+        import pandas as pd
+        from sklearn import preprocessing
+        from sklearn.model_selection import train_test_split
+        from sklearn.neighbors import KNeighborsClassifier
+        from sklearn import metrics
+        from django.conf import settings
+
+        filepath = os.path.join(settings.MEDIA_ROOT, 'stress_data.xlsx')
+        df = pd.read_excel(filepath, header=None)
+        df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
+        
+        X = df[['ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']]
+        y = df['Target']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=12345)
+
+        minmax_scale = preprocessing.MinMaxScaler().fit(X)
+        df_minmax = minmax_scale.transform(X)
+        X_train_norm, X_test_norm, y_train_norm, y_test_norm = train_test_split(df_minmax, y, test_size=0.30, random_state=12345)
+
         print("Started works")
         knn = KNeighborsClassifier(n_neighbors=5)
         fit = knn.fit(X_train, y_train)

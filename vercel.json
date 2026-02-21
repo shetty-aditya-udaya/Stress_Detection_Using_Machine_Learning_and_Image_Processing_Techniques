@@ -1,9 +1,23 @@
 {
     "version": 2,
-    "rewrites": [
+    "builds": [
         {
-            "source": "/(.*)",
-            "destination": "/api/index"
+            "src": "api/index.py",
+            "use": "@vercel/python"
         }
-    ]
+    ],
+    "routes": [
+        {
+            "src": "/favicon.ico",
+            "dest": "api/index.py"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "api/index.py"
+        }
+    ],
+    "env": {
+        "TF_CPP_MIN_LOG_LEVEL": "3",
+        "PYTHONUNBUFFERED": "1"
+    }
 }

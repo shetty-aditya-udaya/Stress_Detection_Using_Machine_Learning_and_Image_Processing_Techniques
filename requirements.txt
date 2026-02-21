@@ -8,4 +8,7 @@ pandas
 scikit-learn
 openpyxl
 jinja2
-python-multipart
+Django
+whitenoise
+PyEmotion
+matplotlib

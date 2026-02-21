@@ -1,7 +1,7 @@
 import os
 import sys
 
-# Silence ALL logs before anything else
+# 1. Silence all ML logs and framework noise immediately
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['PYTHONUNBUFFERED'] = '1'
 
@@ -9,27 +9,28 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-app = FastAPI()
+app = FastAPI(title="Stress Detection API")
 
-# --- Configuration ---
-# Use absolute root path for reliability
-BASE_DIR = os.path.join(os.getcwd(), 'Stress-Detection-using-ML-and-Image-Processing-Techniques-main')
+# 2. Dynamic path discovery (Serverless safe)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(BASE_DIR, '..', 'Stress-Detection-using-ML-and-Image-Processing-Techniques-main')
 
 @app.get("/")
 async def health_check():
+    """Health check route to resolve 404 and verify file system."""
     return {
-        "status": "healthy",
-        "project": "Stress Detection AI",
-        "mode": "standalone",
-        "diag": {
-            "cwd": os.getcwd(),
-            "base_dir_exists": os.path.exists(BASE_DIR)
+        "status": "online",
+        "service": "Stress Detection AI",
+        "version": "1.0.0",
+        "diagnostics": {
+            "project_dir_found": os.path.exists(PROJECT_ROOT),
+            "model_found": os.path.exists(os.path.join(PROJECT_ROOT, 'model.h5'))
         }
     }
 
 @app.get("/favicon.ico")
 async def favicon():
-    return JSONResponse(content={})
+    return JSONResponse(status_code=204, content=None)
 
 class PhysiologicalData(BaseModel):
     ecg: float
@@ -41,15 +42,17 @@ class PhysiologicalData(BaseModel):
 
 @app.post("/predict_stress")
 async def predict_stress(data: PhysiologicalData):
+    """Predict physiological stress using KNN."""
     try:
+        # Lazy imports to keep execution time low
         import numpy as np
         import pandas as pd
         from sklearn.neighbors import KNeighborsClassifier
         from sklearn import preprocessing
         
-        DATA_PATH = os.path.join(BASE_DIR, 'media', 'stress_data.xlsx')
+        DATA_PATH = os.path.join(PROJECT_ROOT, 'media', 'stress_data.xlsx')
         if not os.path.exists(DATA_PATH):
-            raise HTTPException(status_code=404, detail=f"Data file not found at {DATA_PATH}")
+            raise FileNotFoundError(f"Data file missing at {DATA_PATH}")
             
         df = pd.read_excel(DATA_PATH, header=None)
         df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
@@ -66,46 +69,47 @@ async def predict_stress(data: PhysiologicalData):
         input_norm = scaler.transform(input_data)
         prediction = knn.predict(input_norm)
         
-        return {"stress_detected": int(prediction[0])}
+        return {"prediction": int(prediction[0]), "label": "Stressed" if prediction[0] == 1 else "Not Stressed"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/predict_emotion")
 async def predict_emotion(file: UploadFile = File(...)):
+    """Predict emotion from facial image using CNN."""
     try:
         import numpy as np
         import cv2
         import tensorflow as tf
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
         
-        # Load Architecture inside handler
-        model = Sequential()
-        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
-        model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
-        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
-        model.add(Flatten())
-        model.add(Dense(1024, activation='relu'))
-        model.add(Dropout(0.5))
-        model.add(Dense(7, activation='softmax'))
+        # Load architecture inside function
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)),
+            tf.keras.layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
+            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+            tf.keras.layers.Dropout(0.25),
+            tf.keras.layers.Conv2D(128, kernel_size=(3, 3), activation='relu'),
+            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+            tf.keras.layers.Conv2D(128, kernel_size=(3, 3), activation='relu'),
+            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+            tf.keras.layers.Dropout(0.25),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(1024, activation='relu'),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(7, activation='softmax')
+        ])
         
-        MODEL_PATH = os.path.join(BASE_DIR, 'model.h5')
+        MODEL_PATH = os.path.join(PROJECT_ROOT, 'model.h5')
         if not os.path.exists(MODEL_PATH):
-            raise HTTPException(status_code=404, detail="Model weights not found")
+            raise FileNotFoundError("Model weights missing")
         model.load_weights(MODEL_PATH)
         
+        # Process image
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        XML_PATH = os.path.join(BASE_DIR, 'haarcascade_frontalface_default.xml')
+        XML_PATH = os.path.join(PROJECT_ROOT, 'haarcascade_frontalface_default.xml')
         cascade = cv2.CascadeClassifier(XML_PATH)
         faces = cascade.detectMultiScale(gray, 1.3, 5)
         
@@ -119,10 +123,9 @@ async def predict_emotion(file: UploadFile = File(...)):
             maxindex = int(np.argmax(prediction))
             results.append({
                 "emotion": emotion_dict[maxindex],
-                "confidence": float(np.max(prediction)),
-                "box": [int(x), int(y), int(w), int(h)]
+                "confidence": float(np.max(prediction))
             })
             
-        return {"faces_detected": len(results), "predictions": results}
+        return {"faces_detected": len(results), "emotions": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

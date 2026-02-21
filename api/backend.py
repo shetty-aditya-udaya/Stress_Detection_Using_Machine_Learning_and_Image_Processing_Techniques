@@ -128,3 +128,59 @@ async def predict_emotion(file: UploadFile = File(...)):
         return {"faces_detected": len(results), "emotions": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/knn_results")
+async def get_knn_results():
+    """Calculate and return full dataset metrics (formerly local Django logic)."""
+    try:
+        import pandas as pd
+        from sklearn import preprocessing
+        from sklearn.model_selection import train_test_split
+        from sklearn.neighbors import KNeighborsClassifier
+        from sklearn import metrics
+        
+        DATA_PATH = os.path.join(PROJECT_ROOT, 'media', 'stress_data.xlsx')
+        if not os.path.exists(DATA_PATH):
+            raise FileNotFoundError(f"Data file missing at {DATA_PATH}")
+            
+        df = pd.read_excel(DATA_PATH, header=None)
+        df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
+        
+        X = df[['ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']]
+        y = df['Target']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=12345)
+
+        minmax_scale = preprocessing.MinMaxScaler().fit(X)
+        df_minmax = minmax_scale.transform(X)
+        X_train_norm, X_test_norm, y_train_norm, y_test_norm = train_test_split(df_minmax, y, test_size=0.30, random_state=12345)
+
+        knn_norm = KNeighborsClassifier(n_neighbors=5)
+        knn_norm.fit(X_train_norm, y_train)
+
+        pred_test_norm = knn_norm.predict(X_test_norm)
+        
+        accuracy = float(metrics.accuracy_score(y_test, pred_test_norm))
+        classificationerror = float(1 - accuracy)
+        sensitivity = float(metrics.recall_score(y_test, pred_test_norm))
+        
+        confusion = metrics.confusion_matrix(y_test, pred_test_norm)
+        TN = int(confusion[0, 0])
+        FP = int(confusion[0, 1])
+        Specificity = float(TN / float(TN + FP))
+        fsp = float(FP / float(TN + FP))
+        precision = float(metrics.precision_score(y_test, pred_test_norm))
+
+        # Return the first 25 samples for display
+        samples = df.head(25).to_dict(orient='records')
+
+        return {
+            "accuracy": accuracy,
+            "classificationerror": classificationerror,
+            "sensitivity": sensitivity,
+            "Specificity": Specificity,
+            "fsp": fsp,
+            "precision": precision,
+            "samples": samples
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

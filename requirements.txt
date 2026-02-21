@@ -1,4 +1,10 @@
+django
+whitenoise
 fastapi
 uvicorn
 httpx
 python-multipart
+pandas
+openpyxl
+jinja2
+matplotlib

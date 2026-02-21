@@ -24,5 +24,5 @@ ENV PYTHONUNBUFFERED=1
 # Expose port (Render/Railway use env $PORT)
 EXPOSE 8000
 
-# Run with Gunicorn for production stability
-CMD ["sh", "-c", "gunicorn -w 4 -k uvicorn.workers.UvicornWorker api.backend:app --bind 0.0.0.0:${PORT:-8000}"]
+# Run with Uvicorn for single-process stability and low-resource overhead
+CMD ["sh", "-c", "uvicorn api.backend:app --host 0.0.0.0 --port ${PORT:-8000}"]

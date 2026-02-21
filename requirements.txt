@@ -1,16 +1,4 @@
 fastapi
 uvicorn
-gunicorn
 httpx
 python-multipart
-tensorflow-cpu
-opencv-python-headless
-numpy
-pandas
-scikit-learn
-openpyxl
-jinja2
-Django
-whitenoise
-PyEmotion
-matplotlib

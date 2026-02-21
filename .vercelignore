@@ -1,7 +1,16 @@
-Stress-Detection-using-ML-and-Image-Processing-Techniques-main/data/
-Stress-Detection-using-ML-and-Image-Processing-Techniques-main/users/migrations/
-Stress-Detection-using-ML-and-Image-Processing-Techniques-main/db.sqlite3
+# Exclude heavy ML framework files and data
+Stress-Detection-using-ML-and-Image-Processing-Techniques-main/
+Dockerfile
+# Standard excludes
 .git/
 .venv/
 __pycache__/
 *.pyc
+*.h5
+*.pkl
+*.pt
+*.onnx
+*.xlsx
+*.csv
+node_modules/
+.vercel/

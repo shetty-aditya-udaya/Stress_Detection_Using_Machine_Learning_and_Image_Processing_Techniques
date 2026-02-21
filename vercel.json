@@ -1,24 +1,9 @@
 {
     "version": 2,
-    "functions": {
-        "api/index.py": {
-            "runtime": "@vercel/python",
-            "memory": 1024,
-            "maxDuration": 30
-        }
-    },
-    "routes": [
+    "rewrites": [
         {
-            "src": "/favicon.ico",
-            "dest": "api/index.py"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "api/index.py"
+            "source": "/(.*)",
+            "destination": "/api/index"
         }
-    ],
-    "env": {
-        "TF_CPP_MIN_LOG_LEVEL": "3",
-        "PYTHONUNBUFFERED": "1"
-    }
+    ]
 }

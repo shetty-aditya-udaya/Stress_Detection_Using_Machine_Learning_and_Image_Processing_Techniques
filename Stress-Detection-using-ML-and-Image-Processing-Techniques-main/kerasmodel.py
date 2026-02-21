@@ -1,19 +1,21 @@
-import numpy as np
-import argparse
-import cv2
-from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Flatten
-from keras.layers.convolutional import Conv2D
-from keras.optimizers import Adam
-from keras.layers.pooling import MaxPooling2D
-from keras.preprocessing.image import ImageDataGenerator
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import matplotlib as mpl
-mpl.use('TkAgg')
-import matplotlib.pyplot as plt
+# Imports moved inside main() to prevent build-time execution.
 
 def main():
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    import numpy as np
+    import argparse
+    import cv2
+    from keras.models import Sequential
+    from keras.layers.core import Dense, Dropout, Flatten
+    from keras.layers.convolutional import Conv2D
+    from keras.optimizers import Adam
+    from keras.layers.pooling import MaxPooling2D
+    from keras.preprocessing.image import ImageDataGenerator
+    import matplotlib as mpl
+    # mpl.use('TkAgg') # Disabled for serverless
+    import matplotlib.pyplot as plt
+
     # command line argument
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode",help="train/display")

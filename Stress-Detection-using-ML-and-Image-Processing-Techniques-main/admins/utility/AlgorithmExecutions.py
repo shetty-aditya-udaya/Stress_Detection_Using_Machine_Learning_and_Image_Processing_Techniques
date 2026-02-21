@@ -1,15 +1,16 @@
-import pandas as pd
-from matplotlib import pyplot as plt
-from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
-from django.conf import settings
+# Imports moved inside methods to prevent build-time execution or Django config errors.
+import os
 # Preprocessing and loading logic moved inside the class to prevent top-level execution during build.
 
 class KNNclassifier:
     def getKnnResults(self):
+        import pandas as pd
+        from sklearn import preprocessing
+        from sklearn.model_selection import train_test_split
+        from sklearn.neighbors import KNeighborsClassifier
+        from sklearn import metrics
+        from django.conf import settings
+
         filepath = os.path.join(settings.MEDIA_ROOT, 'stress_data.xlsx')
         df = pd.read_excel(filepath, header=None)
         df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']

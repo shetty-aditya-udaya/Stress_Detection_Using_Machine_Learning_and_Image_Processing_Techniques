@@ -1,8 +1,9 @@
 import os
 import sys
 
-# Silence TensorFlow logs
+# Silence ALL logs before anything else
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['PYTHONUNBUFFERED'] = '1'
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
@@ -11,28 +12,19 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # --- Configuration ---
-# Helper to find project directory
-BASE_DIR = os.path.join(os.path.dirname(__file__), '..', 'Stress-Detection-using-ML-and-Image-Processing-Techniques-main')
-
-# --- Lazy Loading Helpers ---
-def load_ml_resources():
-    import numpy as np
-    import pandas as pd
-    import cv2
-    import tensorflow as tf
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
-    from sklearn.neighbors import KNeighborsClassifier
-    from sklearn import preprocessing
-    
-    return np, pd, cv2, tf, Sequential, Conv2D, MaxPooling2D, Dropout, Flatten, Dense, KNeighborsClassifier, preprocessing
+# Use absolute root path for reliability
+BASE_DIR = os.path.join(os.getcwd(), 'Stress-Detection-using-ML-and-Image-Processing-Techniques-main')
 
 @app.get("/")
 async def health_check():
     return {
         "status": "healthy",
-        "project": "Stress Detection AI - Vercel Edition",
-        "message": "Production ready. All routes configured."
+        "project": "Stress Detection AI",
+        "mode": "standalone",
+        "diag": {
+            "cwd": os.getcwd(),
+            "base_dir_exists": os.path.exists(BASE_DIR)
+        }
     }
 
 @app.get("/favicon.ico")
@@ -50,9 +42,15 @@ class PhysiologicalData(BaseModel):
 @app.post("/predict_stress")
 async def predict_stress(data: PhysiologicalData):
     try:
-        np, pd, cv2, tf, Sequential, Conv2D, MaxPooling2D, Dropout, Flatten, Dense, KNeighborsClassifier, preprocessing = load_ml_resources()
+        import numpy as np
+        import pandas as pd
+        from sklearn.neighbors import KNeighborsClassifier
+        from sklearn import preprocessing
         
         DATA_PATH = os.path.join(BASE_DIR, 'media', 'stress_data.xlsx')
+        if not os.path.exists(DATA_PATH):
+            raise HTTPException(status_code=404, detail=f"Data file not found at {DATA_PATH}")
+            
         df = pd.read_excel(DATA_PATH, header=None)
         df.columns=['Target', 'ECG(mV)', 'EMG(mV)','Foot GSR(mV)','Hand GSR(mV)', 'HR(bpm)','RESP(mV)']
         
@@ -75,9 +73,13 @@ async def predict_stress(data: PhysiologicalData):
 @app.post("/predict_emotion")
 async def predict_emotion(file: UploadFile = File(...)):
     try:
-        np, pd, cv2, tf, Sequential, Conv2D, MaxPooling2D, Dropout, Flatten, Dense, KNeighborsClassifier, preprocessing = load_ml_resources()
+        import numpy as np
+        import cv2
+        import tensorflow as tf
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
         
-        # Load Architecture
+        # Load Architecture inside handler
         model = Sequential()
         model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
         model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
@@ -94,6 +96,8 @@ async def predict_emotion(file: UploadFile = File(...)):
         model.add(Dense(7, activation='softmax'))
         
         MODEL_PATH = os.path.join(BASE_DIR, 'model.h5')
+        if not os.path.exists(MODEL_PATH):
+            raise HTTPException(status_code=404, detail="Model weights not found")
         model.load_weights(MODEL_PATH)
         
         contents = await file.read()

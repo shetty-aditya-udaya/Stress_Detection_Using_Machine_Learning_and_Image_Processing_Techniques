@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block contents %}
+<div class="home" style="padding-top: 100px; padding-bottom: 100px; background: #f8f9fa;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="section_title">
+                    <h1>Stress Detection Portal</h1>
+                </div>
+                <div class="section_subtitle">Professional ML-Powered Analysis</div>
+
+                <div class="contact_form_container"
+                    style="background: white; padding: 40px; border-radius: 10px; margin-top: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <p class="text-dark mb-4">Enter physiological metrics below to receive an instant stress prediction
+                        from our AI Engine.</p>
+
+                    {% if result %}
+                    <div class="alert {% if result.prediction == 1 %}alert-danger{% else %}alert-success{% endif %}"
+                        style="padding: 20px; border-radius: 5px; margin-bottom: 30px;">
+                        <h3 style="margin:0;">Status: <strong>{{ result.label }}</strong></h3>
+                    </div>
+                    {% endif %}
+
+                    {% if error %}
+                    <div class="alert alert-warning" style="padding: 15px; border-radius: 5px; margin-bottom: 30px;">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    <form action="{% url 'index' %}" method="post" id="prediction_form">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3" style="text-align: left;">
+                                <label class="text-dark"><strong>ECG (mV)</strong></label>
+                                <input type="number" step="any" class="form-control" name="ecg" placeholder="-0.005"
+                                    required style="border: 1px solid #ddd;">
+                            </div>
+                            <div class="col-md-6 mb-3" style="text-align: left;">
+                                <label class="text-dark"><strong>EMG (mV)</strong></label>
+                                <input type="number" step="any" class="form-control" name="emg" placeholder="0.49"
+                                    required style="border: 1px solid #ddd;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3" style="text-align: left;">
+                                <label class="text-dark"><strong>Foot GSR (mV)</strong></label>
+                                <input type="number" step="any" class="form-control" name="foot_gsr" placeholder="8.257"
+                                    required style="border: 1px solid #ddd;">
+                            </div>
+                            <div class="col-md-6 mb-3" style="text-align: left;">
+                                <label class="text-dark"><strong>Hand GSR (mV)</strong></label>
+                                <input type="number" step="any" class="form-control" name="hand_gsr" placeholder="5.853"
+                                    required style="border: 1px solid #ddd;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3" style="text-align: left;">
+                                <label class="text-dark"><strong>Heart Rate (bpm)</strong></label>
+                                <input type="number" step="any" class="form-control" name="hr" placeholder="66.142"
+                                    required style="border: 1px solid #ddd;">
+                            </div>
+                            <div class="col-md-6 mb-3" style="text-align: left;">
+                                <label class="text-dark"><strong>RESP (mV)</strong></label>
+                                <input type="number" step="any" class="form-control" name="resp" placeholder="45.998"
+                                    required style="border: 1px solid #ddd;">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block mt-4"
+                            style="height: 50px; font-weight: bold; font-size: 18px;">
+                            Run AI Prediction
+                        </button>
+                    </form>
+                </div>
+
+                <div class="about_text mt-5" style="text-align: left;">
+                    <p style="color: #666; line-height: 1.6;">
+                        This portal uses a <strong>Split Cloud Architecture</strong>. The frontend is hosted on Vercel
+                        for high speed, while all computationally intensive ML tasks (8.8GB Engine) are handled by a
+                        dedicated Render container.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

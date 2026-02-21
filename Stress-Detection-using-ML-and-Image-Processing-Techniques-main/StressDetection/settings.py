@@ -57,7 +57,10 @@ ROOT_URLCONF = 'StressDetection.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'assets/templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'assets/templates')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

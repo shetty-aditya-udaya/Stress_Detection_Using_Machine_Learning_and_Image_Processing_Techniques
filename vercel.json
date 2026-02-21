@@ -2,18 +2,18 @@
     "version": 2,
     "builds": [
         {
-            "src": "Stress-Detection-using-ML-and-Image-Processing-Techniques-main/StressDetection/wsgi.py",
+            "src": "api/index.py",
             "use": "@vercel/python"
         }
     ],
     "routes": [
         {
-            "src": "/favicon.ico",
-            "dest": "Stress-Detection-using-ML-and-Image-Processing-Techniques-main/StressDetection/wsgi.py"
+            "src": "/static/(.*)",
+            "dest": "Stress-Detection-using-ML-and-Image-Processing-Techniques-main/assets/static/$1"
         },
         {
             "src": "/(.*)",
-            "dest": "Stress-Detection-using-ML-and-Image-Processing-Techniques-main/StressDetection/wsgi.py"
+            "dest": "api/index.py"
         }
     ],
     "env": {

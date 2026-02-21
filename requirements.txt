@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+tensorflow-cpu
+opencv-python-headless
+numpy
+pandas
+scikit-learn
+openpyxl
+jinja2
+python-multipart

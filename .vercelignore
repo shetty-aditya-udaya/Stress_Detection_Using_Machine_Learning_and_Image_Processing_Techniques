@@ -1,9 +1,11 @@
 # Strategic Vercel Isolation
-# Exclude the entire legacy project (8.8GB)
-Stress-Detection-using-ML-and-Image-Processing-Techniques-main/
+# DO NOT exclude the entire folder, just the bloat!
+# Stress-Detection-using-ML-and-Image-Processing-Techniques-main/  <-- REMOVED THIS
+
+# Exclude only heavy binaries and backend logic that belongs on Render
+api/backend.py
 Dockerfile
 requirements-render.txt
-api/backend.py
 
 # Version control and Env waste
 .git/

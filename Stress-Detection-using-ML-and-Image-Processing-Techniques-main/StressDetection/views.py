@@ -3,7 +3,7 @@ import httpx
 from django.shortcuts import render
 from users.forms import UserRegistrationForm
 
-def index(request):
+def home(request):
     """Home view for Vercel deployment. Handles stress prediction form or renders landing page."""
     context = {}
     if request.method == 'POST':

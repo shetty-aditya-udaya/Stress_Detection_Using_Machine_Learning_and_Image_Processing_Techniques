@@ -24,8 +24,9 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", mainView.index, name="index"),
-    path("index/", mainView.index, name="index"),
+    path("", mainView.home, name="index"),
+    path("home/", mainView.home, name="home"),
+    path("index/", mainView.home, name="home"),
     path("logout/", mainView.logout, name="logout"),
     path("UserLogin/", mainView.UserLogin, name="UserLogin"),
     path("AdminLogin/", mainView.AdminLogin, name="AdminLogin"),
